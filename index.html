@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>旅先みっけ｜旅ルート提案</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Poppins:wght@700;900&display=swap');
+
+  :root {
+    --teal: #00897b;
+    --teal-light: #4db6ac;
+    --teal-dark: #00695c;
+    --orange: #ff7043;
+    --orange-light: #ffab91;
+    --sky: #e0f7fa;
+    --sky2: #b2ebf2;
+    --gray: #f5f5f5;
+    --gray2: #e0e0e0;
+    --text: #2c2c2c;
+    --text2: #555;
+    --radius: 14px;
+    --shadow: 0 4px 24px rgba(0,137,123,0.13);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: linear-gradient(135deg, #e0f7fa 0%, #f0fffe 50%, #fff8f0 100%);
+    min-height: 100vh;
+    color: var(--text);
+  }
+
+  header {
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 60%, var(--teal-light) 100%);
+    padding: 24px 20px 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 50%;
+  }
+  .header-emoji { font-size: 2.2rem; display: block; margin-bottom: 4px; }
+  header h1 {
+    font-family: 'Poppins', 'Noto Sans JP', sans-serif;
+    font-size: 1.7rem; font-weight: 900;
+    color: white; letter-spacing: 0.02em;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  }
+  header p { color: rgba(255,255,255,0.88); font-size: 0.8rem; margin-top: 4px; }
+
+  .container { max-width: 640px; margin: 0 auto; padding: 16px 12px 48px; }
+
+  .catch {
+    background: white; border-radius: var(--radius);
+    padding: 12px 16px; margin-bottom: 12px;
+    box-shadow: var(--shadow); border-left: 5px solid var(--orange);
+    font-size: 0.85rem; color: var(--text2); line-height: 1.6;
+  }
+  .catch strong { color: var(--teal-dark); }
+
+  .card {
+    background: white; border-radius: var(--radius);
+    padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow);
+  }
+
+  .step-label {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--teal); color: white;
+    font-size: 0.72rem; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px;
+    margin-bottom: 10px; letter-spacing: 0.05em;
+  }
+
+  .card h2 { font-size: 0.95rem; font-weight: 700; color: var(--teal-dark); margin-bottom: 10px; }
+
+  /* STEP1-3 コンパクト1枚カード */
+  .location-card {
+    background: white; border-radius: var(--radius);
+    padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow);
+  }
+  .location-card .step-label { margin-bottom: 12px; }
+  .location-card h2 { font-size: 0.95rem; font-weight: 700; color: var(--teal-dark); margin-bottom: 12px; }
+  .location-rows { display: flex; flex-direction: column; gap: 8px; }
+  .location-row { display: flex; align-items: center; gap: 8px; }
+  .location-row label {
+    font-size: 0.82rem; font-weight: 700; color: var(--text2);
+    white-space: nowrap; width: 76px; flex-shrink: 0;
+  }
+  .location-row select { flex: 1; }
+
+  select {
+    width: 100%; padding: 10px 12px;
+    border: 2px solid var(--gray2); border-radius: 10px;
+    font-family: 'Noto Sans JP', sans-serif; font-size: 0.88rem;
+    color: var(--text); background: var(--gray);
+    transition: border-color 0.2s;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2300897b' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center; background-size: 16px; cursor: pointer;
+  }
+  select:focus { outline: none; border-color: var(--teal); background-color: white; }
+
+  /* 同行者グリッド */
+  .companion-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .comp-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 10px 4px; border: 2px solid var(--gray2); border-radius: 10px;
+    background: var(--gray); cursor: pointer; transition: all 0.2s;
+    font-size: 0.72rem; color: var(--text2); font-weight: 500; user-select: none;
+  }
+  .comp-btn .icon { font-size: 1.5rem; }
+  .comp-btn.active {
+    border-color: var(--teal); background: var(--sky);
+    color: var(--teal-dark); font-weight: 700;
+  }
+
+  /* 子ども年齢 */
+  .children-area { margin-top: 12px; display: none; }
+  .children-area.visible { display: block; }
+  .children-area h3 { font-size: 0.82rem; color: var(--teal-dark); font-weight: 700; margin-bottom: 8px; }
+  .children-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  @media(max-width: 400px) { .children-grid { grid-template-columns: repeat(3, 1fr); } }
+  .child-item { display: flex; flex-direction: column; gap: 3px; }
+  .child-item label { font-size: 0.7rem; color: var(--text2); font-weight: 600; text-align: center; }
+  .child-item select { font-size: 0.78rem; padding: 7px 4px; }
+
+  /* シニア年齢帯 */
+  .senior-area { margin-top: 12px; display: none; }
+  .senior-area.visible { display: block; }
+  .senior-area h3 { font-size: 0.82rem; color: var(--teal-dark); font-weight: 700; margin-bottom: 8px; }
+  .senior-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .senior-btn {
+    padding: 9px 4px; border: 2px solid var(--gray2); border-radius: 10px;
+    background: var(--gray); cursor: pointer; text-align: center;
+    font-family: 'Noto Sans JP', sans-serif; font-size: 0.82rem; font-weight: 600;
+    color: var(--text2); transition: all 0.2s;
+  }
+  .senior-btn.active { border-color: var(--teal); background: var(--sky); color: var(--teal-dark); }
+
+  /* テーマ */
+  .theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  @media(max-width: 400px) { .theme-grid { grid-template-columns: repeat(3, 1fr); } }
+  .theme-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 9px 4px; border: 2px solid var(--gray2); border-radius: 10px;
+    background: var(--gray); cursor: pointer; transition: all 0.2s;
+    font-size: 0.72rem; color: var(--text2); font-weight: 500; user-select: none;
+  }
+  .theme-btn .icon { font-size: 1.3rem; }
+  .theme-btn.active {
+    border-color: var(--teal); background: var(--sky);
+    color: var(--teal-dark); font-weight: 700;
+  }
+
+  /* 移動手段 */
+  .transport-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  @media(max-width: 400px) { .transport-grid { grid-template-columns: repeat(3, 1fr); } }
+  .trans-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 9px 4px; border: 2px solid var(--gray2); border-radius: 10px;
+    background: var(--gray); cursor: pointer; transition: all 0.2s;
+    font-size: 0.7rem; color: var(--text2); font-weight: 500; user-select: none;
+  }
+  .trans-btn .icon { font-size: 1.3rem; }
+  .trans-btn.active {
+    border-color: var(--orange); background: #fff3f0;
+    color: var(--orange); font-weight: 700;
+  }
+
+  /* 旅行日数 */
+  .days-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .day-btn {
+    padding: 9px 4px; border: 2px solid var(--gray2); border-radius: 10px;
+    background: var(--gray); cursor: pointer; text-align: center;
+    font-family: 'Noto Sans JP', sans-serif; font-size: 0.8rem; font-weight: 600;
+    color: var(--text2); transition: all 0.2s;
+  }
+  .day-btn.active { border-color: var(--teal); background: var(--sky); color: var(--teal-dark); }
+
+  .badge {
+    display: inline-block; background: var(--orange-light); color: var(--orange);
+    font-size: 0.68rem; font-weight: 700; padding: 2px 7px;
+    border-radius: 20px; margin-left: 6px; vertical-align: middle;
+  }
+
+  .generate-btn {
+    width: 100%; padding: 16px;
+    background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+    color: white; border: none; border-radius: var(--radius);
+    font-family: 'Noto Sans JP', sans-serif; font-size: 1.05rem; font-weight: 700;
+    cursor: pointer; margin: 16px 0 12px;
+    box-shadow: 0 6px 20px rgba(0,137,123,0.35); transition: all 0.2s;
+  }
+  .generate-btn:hover { transform: translateY(-2px); }
+  .generate-btn:active { transform: translateY(0); }
+
+  .result-area { display: none; background: white; border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-top: 4px; }
+  .result-area.visible { display: block; }
+
+  .result-label { font-size: 0.82rem; font-weight: 700; color: var(--teal-dark); margin-bottom: 8px; }
+
+  textarea#promptBox {
+    width: 100%; background: #f8fffe;
+    border: 1.5px solid var(--sky2); border-radius: 10px;
+    padding: 14px; font-size: 0.85rem; line-height: 1.8;
+    color: var(--text); font-family: 'Noto Sans JP', sans-serif;
+    resize: vertical; min-height: 260px; margin-bottom: 12px;
+  }
+
+  .action-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  @media(max-width: 400px) { .action-btns { grid-template-columns: 1fr 1fr; } }
+
+  .copy-btn {
+    padding: 12px 6px; background: var(--orange); color: white;
+    border: none; border-radius: 10px;
+    font-family: 'Noto Sans JP', sans-serif; font-size: 0.82rem; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 4px 14px rgba(255,112,67,0.3);
+    text-align: center;
+  }
+  .copy-btn:hover { background: #e64a19; }
+  .copy-btn.copied { background: var(--teal); }
+
+  .line-btn {
+    padding: 12px 6px; background: #06C755; color: white;
+    border: none; border-radius: 10px;
+    font-family: 'Noto Sans JP', sans-serif; font-size: 0.82rem; font-weight: 700;
+    cursor: pointer; transition: all 0.2s; text-align: center;
+    box-shadow: 0 4px 14px rgba(6,199,85,0.3); text-decoration: none;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+  }
+  .line-btn:hover { background: #05b34d; }
+
+  .map-btn {
+    padding: 12px 6px; background: white; color: var(--teal-dark);
+    border: 2px solid var(--teal); border-radius: 10px;
+    font-family: 'Noto Sans JP', sans-serif; font-size: 0.82rem; font-weight: 700;
+    cursor: pointer; transition: all 0.2s; text-decoration: none;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+  }
+  .map-btn:hover { background: var(--sky); }
+
+  .howto {
+    background: #fff8f0; border-radius: var(--radius);
+    padding: 14px 16px; margin-top: 12px;
+    border: 1.5px dashed var(--orange-light);
+  }
+  .howto h3 { font-size: 0.85rem; color: var(--orange); font-weight: 700; margin-bottom: 8px; }
+  .howto ol { padding-left: 16px; font-size: 0.8rem; color: var(--text2); line-height: 2; }
+  .howto a { color: var(--teal); font-weight: 700; text-decoration: none; }
+
+  footer { text-align: center; padding: 20px; font-size: 0.75rem; color: #aaa; }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="header-emoji">🗾✈️</span>
+  <h1>旅先みっけ</h1>
+  <p>あなたに合った旅ルート｜ベスト3＋費用目安をお届けします</p>
+</header>
+
+<div class="container">
+
+  <div class="catch">
+    「情報が多すぎてどこに行けばいいかわからない…」<br>
+    <strong>旅先みっけ</strong>が、同行者・予算・移動手段に合わせた<strong>ベスト3ルート＋費用目安</strong>のプロンプトをつくります。LINEで家族にそのまま共有できます😊
+  </div>
+
+  <!-- STEP1-3 コンパクト1枚カード -->
+  <div class="location-card">
+    <div class="step-label">📍 STEP 1 どこに行きますか？</div>
+    <div class="location-rows">
+      <div class="location-row">
+        <label>エリア</label>
+        <select id="region" onchange="updatePrefecture()">
+          <option value="">── 選ぶ ──</option>
+          <option value="北海道">北海道</option>
+          <option value="東北">東北</option>
+          <option value="関東">関東</option>
+          <option value="中部">中部</option>
+          <option value="近畿">近畿</option>
+          <option value="中国">中国</option>
+          <option value="四国">四国</option>
+          <option value="九州">九州</option>
+          <option value="沖縄">沖縄</option>
+        </select>
+      </div>
+      <div class="location-row">
+        <label>都道府県</label>
+        <select id="prefecture" onchange="updateCity()">
+          <option value="">── エリアを先に選んでください ──</option>
+        </select>
+      </div>
+      <div class="location-row">
+        <label>都市・地域</label>
+        <select id="city">
+          <option value="">── 都道府県を先に選んでください ──</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP2 同行者 -->
+  <div class="card">
+    <div class="step-label">👥 STEP 2</div>
+    <h2>同行者を選んでください <span class="badge">複数OK</span></h2>
+    <div class="companion-grid">
+      <div class="comp-btn" data-comp="family" onclick="toggleComp(this)"><span class="icon">👨‍👩‍👧‍👦</span>ファミリー</div>
+      <div class="comp-btn" data-comp="senior" onclick="toggleComp(this)"><span class="icon">👴👵</span>シニア夫婦</div>
+      <div class="comp-btn" data-comp="couple" onclick="toggleComp(this)"><span class="icon">💑</span>夫婦・カップル</div>
+      <div class="comp-btn" data-comp="friends" onclick="toggleComp(this)"><span class="icon">👫</span>友人グループ</div>
+      <div class="comp-btn" data-comp="grandchild" onclick="toggleComp(this)"><span class="icon">🧓👶</span>祖父母＋孫</div>
+      <div class="comp-btn" data-comp="solo" onclick="toggleComp(this)"><span class="icon">🚶</span>ひとり旅</div>
+    </div>
+    <div class="children-area" id="childrenArea">
+      <h3>👧 お子さん・お孫さんの年齢（最大5名）</h3>
+      <p style="font-size:0.76rem;color:var(--text2);margin-bottom:8px;">いない場合は「なし」のまま</p>
+      <div class="children-grid" id="childrenGrid"></div>
+    </div>
+    <div class="senior-area" id="seniorArea">
+      <h3>👴 シニアの年齢帯</h3>
+      <div class="senior-grid">
+        <button class="senior-btn" data-age="60代" onclick="selectSenior(this)">60代</button>
+        <button class="senior-btn" data-age="70代" onclick="selectSenior(this)">70代</button>
+        <button class="senior-btn" data-age="80代以上" onclick="selectSenior(this)">80代以上</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP3 移動手段 -->
+  <div class="card">
+    <div class="step-label">🚗 STEP 3</div>
+    <h2>移動手段を選んでください <span class="badge">複数OK</span></h2>
+    <div class="transport-grid">
+      <div class="trans-btn" data-trans="マイカー" onclick="toggleTrans(this)"><span class="icon">🚗</span>マイカー</div>
+      <div class="trans-btn" data-trans="レンタカー" onclick="toggleTrans(this)"><span class="icon">🚙</span>レンタカー</div>
+      <div class="trans-btn" data-trans="電車・バス" onclick="toggleTrans(this)"><span class="icon">🚃</span>電車・バス</div>
+      <div class="trans-btn" data-trans="飛行機" onclick="toggleTrans(this)"><span class="icon">✈️</span>飛行機</div>
+      <div class="trans-btn" data-trans="新幹線" onclick="toggleTrans(this)"><span class="icon">🚅</span>新幹線</div>
+    </div>
+  </div>
+
+  <!-- STEP4 テーマ -->
+  <div class="card">
+    <div class="step-label">🎯 STEP 4</div>
+    <h2>テーマを選んでください <span class="badge">複数OK</span></h2>
+    <div class="theme-grid">
+      <div class="theme-btn" data-theme="温泉" onclick="toggleTheme(this)"><span class="icon">♨️</span>温泉</div>
+      <div class="theme-btn" data-theme="グルメ" onclick="toggleTheme(this)"><span class="icon">🍜</span>グルメ</div>
+      <div class="theme-btn" data-theme="自然・絶景" onclick="toggleTheme(this)"><span class="icon">🏔️</span>自然・絶景</div>
+      <div class="theme-btn" data-theme="歴史・文化" onclick="toggleTheme(this)"><span class="icon">⛩️</span>歴史・文化</div>
+      <div class="theme-btn" data-theme="海・ビーチ" onclick="toggleTheme(this)"><span class="icon">🏖️</span>海・ビーチ</div>
+      <div class="theme-btn" data-theme="体験・アクティビティ" onclick="toggleTheme(this)"><span class="icon">🎪</span>体験</div>
+      <div class="theme-btn" data-theme="テーマパーク" onclick="toggleTheme(this)"><span class="icon">🎡</span>テーマパーク</div>
+      <div class="theme-btn" data-theme="ドライブ" onclick="toggleTheme(this)"><span class="icon">🚗</span>ドライブ</div>
+    </div>
+  </div>
+
+  <!-- STEP5 旅行日数 -->
+  <div class="card">
+    <div class="step-label">📅 STEP 5</div>
+    <h2>旅行日数を選んでください</h2>
+    <div class="days-grid">
+      <button class="day-btn" data-days="日帰り" onclick="selectDay(this)">日帰り</button>
+      <button class="day-btn" data-days="1泊2日" onclick="selectDay(this)">1泊2日</button>
+      <button class="day-btn" data-days="2泊3日" onclick="selectDay(this)">2泊3日</button>
+      <button class="day-btn" data-days="3泊4日" onclick="selectDay(this)">3泊4日</button>
+    </div>
+  </div>
+
+  <button class="generate-btn" onclick="generatePrompt()">
+    🗺️ ベスト3ルート＋費用目安のプロンプトを生成する
+  </button>
+
+  <!-- 結果エリア -->
+  <div class="result-area" id="resultArea">
+    <div class="result-label">📋 生成されたプロンプト（ClaudeやChatGPTに貼り付けてください）</div>
+    <textarea id="promptBox" readonly></textarea>
+    <div class="action-btns">
+      <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">📋 コピー</button>
+      <button class="line-btn" id="lineBtn" onclick="shareToLine()">💬 LINEで共有</button>
+      <a class="map-btn" id="mapLink" href="#" target="_blank">🗺️ マップ</a>
+    </div>
+  </div>
+
+  <div class="howto">
+    <h3>📖 使い方ガイド</h3>
+    <ol>
+      <li>STEP1〜5を入力する</li>
+      <li>「プロンプトを生成する」を押す</li>
+      <li>「コピー」してClaudeやChatGPTに貼り付け</li>
+      <li>ルート＋費用が出たら「LINEで共有」で家族に送る😊</li>
+    </ol>
+  </div>
+
+</div>
+
+<footer>
+  旅先みっけ｜みっけシリーズ © Smile Plus Consulting<br>
+  考えるを、ひとりにしない。
+</footer>
+
+<script>
+// ━━━━━━━━━━━━━━━━━━━━━━
+// エリアデータ
+// ━━━━━━━━━━━━━━━━━━━━━━
+const data = {
+  "北海道": { "北海道": ["札幌","函館","小樽","旭川","帯広","釧路","網走・知床","富良野・美瑛","洞爺湖・登別","ニセコ"] },
+  "東北": {
+    "青森県": ["青森市","弘前","八戸","十和田・奥入瀬"],
+    "岩手県": ["盛岡","平泉・一関","花巻・遠野"],
+    "宮城県": ["仙台","松島","鳴子温泉"],
+    "秋田県": ["秋田市","角館","男鹿"],
+    "山形県": ["山形市","蔵王","鶴岡・庄内","米沢"],
+    "福島県": ["福島市","会津若松","磐梯・猪苗代","いわき"]
+  },
+  "関東": {
+    "東京都": ["新宿・渋谷","浅草・上野","お台場・臨海","秋葉原","高尾山・奥多摩"],
+    "神奈川県": ["横浜","鎌倉","箱根","江の島・湘南"],
+    "埼玉県": ["さいたま市","川越","秩父"],
+    "千葉県": ["千葉市","成田","房総半島","舞浜（TDR周辺）"],
+    "茨城県": ["水戸","つくば","大洗"],
+    "栃木県": ["日光","那須","宇都宮"],
+    "群馬県": ["草津温泉","伊香保温泉","前橋・高崎"]
+  },
+  "中部": {
+    "新潟県": ["新潟市","妙高・上越","佐渡"],
+    "富山県": ["富山市","黒部・宇奈月","高岡"],
+    "石川県": ["金沢","能登半島","加賀温泉郷"],
+    "福井県": ["福井市","永平寺","東尋坊・芦原温泉"],
+    "山梨県": ["富士五湖","甲府","清里・小淵沢"],
+    "長野県": ["松本","軽井沢","長野市（善光寺）","白馬","上高地"],
+    "岐阜県": ["飛騨高山","白川郷","岐阜市"],
+    "静岡県": ["浜松","静岡市","熱海・伊東","富士山周辺"],
+    "愛知県": ["名古屋","犬山","知多半島"]
+  },
+  "近畿": {
+    "大阪府": ["大阪市内","ユニバーサル周辺","堺"],
+    "兵庫県": ["神戸","有馬温泉","姫路","城崎温泉"],
+    "京都府": ["京都市内","嵐山","宇治","天橋立"],
+    "奈良県": ["奈良市","吉野","飛鳥"],
+    "滋賀県": ["琵琶湖周辺","彦根","長浜"],
+    "和歌山県": ["白浜","高野山","那智勝浦"],
+    "三重県": ["伊勢","鳥羽","志摩"]
+  },
+  "中国": {
+    "鳥取県": ["鳥取砂丘周辺","倉吉","三朝温泉"],
+    "島根県": ["松江・出雲","石見銀山","隠岐"],
+    "岡山県": ["岡山市","倉敷","蒜山高原"],
+    "広島県": ["広島市","宮島","尾道","福山"],
+    "山口県": ["下関","萩","秋吉台","山口市"]
+  },
+  "四国": {
+    "香川県": ["高松","小豆島","琴平・こんぴら"],
+    "愛媛県": ["松山・道後温泉","今治","宇和島","内子"],
+    "高知県": ["高知市","四万十川","足摺岬"],
+    "徳島県": ["徳島市","大歩危・祖谷","鳴門"]
+  },
+  "九州": {
+    "福岡県": ["福岡市","北九州","太宰府","糸島"],
+    "佐賀県": ["佐賀市","嬉野温泉","呼子"],
+    "長崎県": ["長崎市","ハウステンボス","雲仙・島原"],
+    "熊本県": ["熊本市","阿蘇","天草"],
+    "大分県": ["別府","湯布院","大分市"],
+    "宮崎県": ["宮崎市","高千穂","日南海岸"],
+    "鹿児島県": ["鹿児島市","屋久島","指宿","奄美大島"]
+  },
+  "沖縄": { "沖縄県": ["那覇・首里","恩納村・読谷","北部・美ら海","石垣島","宮古島"] }
+};
+
+// 子ども年齢プルダウン生成
+const grid = document.getElementById('childrenGrid');
+for (let i = 1; i <= 5; i++) {
+  const div = document.createElement('div');
+  div.className = 'child-item';
+  let options = '<option value="">なし</option>';
+  for (let age = 0; age <= 18; age++) options += `<option value="${age}歳">${age}歳</option>`;
+  div.innerHTML = `<label>${i}人目</label><select id="child${i}">${options}</select>`;
+  grid.appendChild(div);
+}
+
+// エリア→都道府県→都市
+function updatePrefecture() {
+  const region = document.getElementById('region').value;
+  const prefSel = document.getElementById('prefecture');
+  const citySel = document.getElementById('city');
+  prefSel.innerHTML = '<option value="">── 都道府県を選ぶ ──</option>';
+  citySel.innerHTML = '<option value="">── 都道府県を先に選んでください ──</option>';
+  if (!region) return;
+  Object.keys(data[region]).forEach(p => prefSel.innerHTML += `<option value="${p}">${p}</option>`);
+}
+function updateCity() {
+  const region = document.getElementById('region').value;
+  const pref = document.getElementById('prefecture').value;
+  const citySel = document.getElementById('city');
+  citySel.innerHTML = '<option value="">── 都市・地域を選ぶ ──</option>';
+  if (!region || !pref) return;
+  data[region][pref].forEach(c => citySel.innerHTML += `<option value="${c}">${c}</option>`);
+}
+
+// 同行者
+function toggleComp(el) {
+  el.classList.toggle('active');
+  updateCompanionAreas();
+}
+function updateCompanionAreas() {
+  const actives = [...document.querySelectorAll('.comp-btn.active')].map(b => b.dataset.comp);
+  const needChild = actives.includes('family') || actives.includes('grandchild');
+  const needSenior = actives.includes('senior') || actives.includes('grandchild');
+  document.getElementById('childrenArea').classList.toggle('visible', needChild);
+  document.getElementById('seniorArea').classList.toggle('visible', needSenior);
+}
+
+let selectedSeniorAge = '';
+function selectSenior(el) {
+  document.querySelectorAll('.senior-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  selectedSeniorAge = el.dataset.age;
+}
+
+// 移動手段
+function toggleTrans(el) { el.classList.toggle('active'); }
+
+// テーマ
+function toggleTheme(el) { el.classList.toggle('active'); }
+
+// 旅行日数
+let selectedDays = '';
+function selectDay(el) {
+  document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  selectedDays = el.dataset.days;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━
+// プロンプト生成
+// ━━━━━━━━━━━━━━━━━━━━━━
+let generatedPrompt = '';
+
+function generatePrompt() {
+  const region = document.getElementById('region').value;
+  const pref   = document.getElementById('prefecture').value;
+  const city   = document.getElementById('city').value;
+  const themes = [...document.querySelectorAll('.theme-btn.active')].map(b => b.dataset.theme);
+  const transports = [...document.querySelectorAll('.trans-btn.active')].map(b => b.dataset.trans);
+  const days   = selectedDays;
+  const companions = [...document.querySelectorAll('.comp-btn.active')].map(b => b.dataset.comp);
+
+  if (!region || !pref || !city) { alert('エリア・都道府県・都市を選んでください😊'); return; }
+  if (companions.length === 0)   { alert('同行者を選んでください😊'); return; }
+  if (transports.length === 0)   { alert('移動手段を選んでください😊'); return; }
+  if (!days)                     { alert('旅行日数を選んでください😊'); return; }
+  if (themes.length === 0)       { alert('テーマを1つ以上選んでください😊'); return; }
+
+  const compMap = {
+    family: 'ファミリー（子連れ）', senior: 'シニア夫婦',
+    couple: '夫婦・カップル', friends: '友人・グループ',
+    grandchild: '祖父母＋孫', solo: 'ひとり旅'
+  };
+  const compText = companions.map(c => compMap[c]).join('・');
+
+  const children = [];
+  for (let i = 1; i <= 5; i++) {
+    const v = document.getElementById('child' + i).value;
+    if (v) children.push(v);
+  }
+
+  const needSenior = companions.includes('senior') || companions.includes('grandchild');
+  const needChild  = companions.includes('family') || companions.includes('grandchild');
+
+  let companionDetail = `同行者：${compText}\n`;
+  if (needChild && children.length > 0) companionDetail += `お子さん・お孫さんの年齢：${children.join('・')}（${children.length}名）\n`;
+  if (needSenior && selectedSeniorAge)  companionDetail += `シニアの年齢帯：${selectedSeniorAge}\n`;
+
+  let specialNote = '';
+  if (needSenior) {
+    const ageNote = selectedSeniorAge === '80代以上'
+      ? '・歩行距離は1日合計2km以内\n・段差・坂道・長い階段は避ける\n・バリアフリー対応を優先\n・休憩を多めに設ける'
+      : '・歩行距離は1日合計3km以内\n・ゆったりしたペース配分\n・温泉・食事・景色をじっくり楽しめる構成\n・座って休める場所を意識する';
+    specialNote += `\n【シニア向け配慮】\n${ageNote}\n`;
+  }
+  if (needChild && children.length > 0) {
+    const hasToddler = children.some(c => parseInt(c) <= 3);
+    const hasSmall   = children.some(c => parseInt(c) >= 4 && parseInt(c) <= 7);
+    let childNote = '・子どもが楽しめるスポットを必ず1か所入れる\n・移動は1区間1時間以内';
+    if (hasToddler) childNote += '\n・オムツ替え・授乳スペースがある施設を優先';
+    if (hasSmall)   childNote += '\n・体験・アクティビティ型スポットを入れる';
+    specialNote += `\n【子ども・孫向け配慮】\n${childNote}\n`;
+  }
+  if (companions.includes('solo')) {
+    specialNote += '\n【ひとり旅向け配慮】\n・ひとりで入りやすい飲食店・施設を優先\n・安全面も考慮する\n';
+  }
+
+  const prompt =
+`あなたは旅行プランニングの専門家です。
+以下の条件に合わせて、旅行ルートをベスト3で提案してください。
+
+【旅行条件】
+エリア：${pref}・${city}周辺
+旅行日数：${days}
+${companionDetail}移動手段：${transports.join('・')}
+希望テーマ：${themes.join('・')}
+${specialNote}
+【共通ルール】
+・ルートはA・B・Cの3パターンで提案する
+・1日あたりのスポットは最大3か所に絞る
+・情報は絞って「決めやすさ」を最優先にする
+
+【出力形式】※ルートA・B・C それぞれ同じ形式で
+
+─────────────────
+ルートA（タイトル）：〇〇派向け
+─────────────────
+1日目：スポット名 → スポット名 → 宿泊エリア
+2日目：スポット名 → スポット名
+
+おすすめポイント：（2行以内）
+子連れ・シニアメモ：（1行）
+移動手段メモ：（1行）
+
+【費用目安】（${transports.join('・')}利用・1人あたり概算）
+交通費：〇〇円〜〇〇円
+宿泊費：〇〇円〜〇〇円（1泊）
+食費：〇〇円〜〇〇円（1日）
+入場料等：〇〇円〜〇〇円
+─────────────────
+1日あたり合計：約〇〇円〜〇〇円
+旅行全体合計：約〇〇円〜〇〇円
+─────────────────
+
+上記をルートA・B・Cすべてで提案してください。`;
+
+  generatedPrompt = prompt;
+
+  const box = document.getElementById('promptBox');
+  box.value = prompt;
+  box.style.height = 'auto';
+  box.style.height = box.scrollHeight + 'px';
+
+  document.getElementById('resultArea').classList.add('visible');
+
+  const mapQuery = encodeURIComponent(city + ' ' + themes[0] + ' 観光');
+  document.getElementById('mapLink').href = `https://www.google.com/maps/search/${mapQuery}`;
+
+  setTimeout(() => {
+    document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+// コピー（textarea方式・Artifact対応）
+function copyPrompt() {
+  const box = document.getElementById('promptBox');
+  box.select();
+  box.setSelectionRange(0, 99999);
+  let success = false;
+  try { success = document.execCommand('copy'); } catch(e) {}
+  if (!success && navigator.clipboard) navigator.clipboard.writeText(box.value).catch(() => {});
+  const btn = document.getElementById('copyBtn');
+  btn.textContent = '✅ コピー済';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = '📋 コピー'; btn.classList.remove('copied'); }, 2500);
+}
+
+// LINE共有
+function shareToLine() {
+  const text = encodeURIComponent(generatedPrompt);
+  window.open(`https://line.me/R/msg/text/?${text}`, '_blank');
+}
+</script>
+
+</body>
+</html>
